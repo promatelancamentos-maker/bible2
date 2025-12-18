@@ -26,13 +26,12 @@ body {
   padding: 26px;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-  animation: fadeIn 0.8s ease;
+  animation: fadeIn .8s ease;
 }
 
 h1 {
   font-family: 'Playfair Display', serif;
   text-align: center;
-  margin-bottom: 4px;
 }
 
 .subtitle {
@@ -57,10 +56,7 @@ h1 {
   transition: width .4s ease;
 }
 
-.question {
-  font-size: 18px;
-  margin-bottom: 15px;
-}
+.question { font-size: 18px; margin-bottom: 15px; }
 
 .option {
   background: #2a2a2a;
@@ -68,7 +64,6 @@ h1 {
   border-radius: 8px;
   margin-bottom: 10px;
   cursor: pointer;
-  transition: .3s;
 }
 
 .option:hover { background: #3a3a3a; }
@@ -97,6 +92,11 @@ button {
   color: #fff;
 }
 
+.share {
+  background: #2f2f2f;
+  color: #fff;
+}
+
 .result {
   text-align: center;
   font-size: 20px;
@@ -113,7 +113,7 @@ button {
 
 <div class="quiz-box">
   <h1>📖 Daily Bible Quiz</h1>
-  <div class="subtitle">Conheça a Palavra todos os dias</div>
+  <div class="subtitle">Um novo quiz todos os dias</div>
 
   <div class="progress">
     <div class="progress-bar" id="progress"></div>
@@ -122,6 +122,9 @@ button {
   <div id="quiz"></div>
 
   <button id="nextBtn" onclick="nextQuestion()">Continuar</button>
+  <button id="shareBtn" class="share" onclick="shareResult()" style="display:none">
+    🔗 Compartilhar meu resultado
+  </button>
   <button id="nextQuizBtn" class="secondary" onclick="nextQuiz()" style="display:none">
     ▶️ Próximo Quiz
   </button>
@@ -129,9 +132,8 @@ button {
 
 <script>
 /* ===============================
-   BANCO DE QUIZZES (BASE GRANDE)
-   ➜ Exemplo com 10 quizzes
-   ➜ Estrutura pronta para 50–100+
+   BANCO DE QUIZZES (EXPANSÍVEL)
+   ➜ Copie blocos para chegar a 50–100+
 ================================ */
 
 const questionPools = [
@@ -155,33 +157,9 @@ const questionPools = [
 ],
 
 [
- {q:"Quem interpretou sonhos no Egito?",o:["José","Moisés","Arão","Jacó"],a:0,v:"Gênesis 41:15"},
  {q:"Quem sobreviveu à cova dos leões?",o:["Daniel","Davi","Jeremias","Elias"],a:0,v:"Daniel 6:22"},
- {q:"Quem construiu o templo?",o:["Davi","Salomão","Saul","Esdras"],a:1,v:"1 Reis 6:1"}
-],
-
-[
- {q:"Quem foi o primeiro rei de Israel?",o:["Davi","Saul","Salomão","Samuel"],a:1,v:"1 Samuel 10:1"},
- {q:"Quem liderou Israel após Moisés?",o:["Calebe","Josué","Arão","Gideão"],a:1,v:"Josué 1:2"},
+ {q:"Quem construiu o templo?",o:["Davi","Salomão","Saul","Esdras"],a:1,v:"1 Reis 6:1"},
  {q:"Quem escreveu Provérbios?",o:["Davi","Salomão","Asafe","Paulo"],a:1,v:"Provérbios 1:1"}
-],
-
-[
- {q:"Quem foi arrebatado sem morrer?",o:["Elias","Eliseu","Isaías","Jeremias"],a:0,v:"2 Reis 2:11"},
- {q:"Quem reconstruiu os muros de Jerusalém?",o:["Neemias","Esdras","Zorobabel","Josué"],a:0,v:"Neemias 2:17"},
- {q:"Quem batizou Jesus?",o:["Pedro","João Batista","Tiago","André"],a:1,v:"Mateus 3:13"}
-],
-
-[
- {q:"Quem escreveu a maioria das cartas do NT?",o:["Pedro","Paulo","João","Lucas"],a:1,v:"Romanos 1:1"},
- {q:"Quem caminhou sobre as águas?",o:["Pedro","João","Jesus","Moisés"],a:2,v:"Mateus 14:25"},
- {q:"Quem foi ressuscitado por Jesus?",o:["Lázaro","Elias","Paulo","Estevão"],a:0,v:"João 11:43"}
-],
-
-[
- {q:"Quem escreveu Salmo 23?",o:["Moisés","Davi","Salomão","Asafe"],a:1,v:"Salmos 23:1"},
- {q:"Quem teve forças restauradas como águia?",o:["Davi","Isaías","Jó","Jeremias"],a:1,v:"Isaías 40:31"},
- {q:"Quem construiu o altar no Carmelo?",o:["Eliseu","Elias","Samuel","Natã"],a:1,v:"1 Reis 18:36"}
 ]
 
 ];
@@ -196,62 +174,81 @@ const todayKey = new Date().toISOString().slice(0,10)
 let quizIndex = todayKey % questionPools.length;
 let quizData = questionPools[quizIndex];
 
-let index = 0, score = 0, answered = false;
+let index = 0;
+let score = 0;
+let answered = false;
 
-function loadQuestion(){
-  answered=false;
-  const q=quizData[index];
-  document.getElementById("quiz").innerHTML=`
+function loadQuestion() {
+  answered = false;
+  const q = quizData[index];
+  document.getElementById("quiz").innerHTML = `
     <div class="question">${q.q}</div>
     ${q.o.map((opt,i)=>`<div class="option" onclick="select(${i})">${opt}</div>`).join("")}
   `;
   updateProgress();
 }
 
-function select(i){
-  if(answered) return;
-  answered=true;
-  const q=quizData[index];
+function select(i) {
+  if (answered) return;
+  answered = true;
+  const q = quizData[index];
   document.querySelectorAll(".option").forEach((el,idx)=>{
-    if(idx===q.a) el.classList.add("correct");
-    if(idx===i && idx!==q.a) el.classList.add("wrong");
+    if (idx === q.a) el.classList.add("correct");
+    if (idx === i && idx !== q.a) el.classList.add("wrong");
   });
-  if(i===q.a) score++;
-  document.getElementById("quiz").innerHTML+=`<div class="verse">📜 ${q.v}</div>`;
+  if (i === q.a) score++;
+  document.getElementById("quiz").innerHTML += `<div class="verse">📜 ${q.v}</div>`;
 }
 
-function nextQuestion(){
-  if(!answered) return;
+function nextQuestion() {
+  if (!answered) return;
   index++;
-  if(index<quizData.length) loadQuestion();
+  if (index < quizData.length) loadQuestion();
   else endQuiz();
 }
 
-function endQuiz(){
-  document.getElementById("quiz").innerHTML=`
+function endQuiz() {
+  document.getElementById("quiz").innerHTML = `
     <div class="result">
       ✅ Você acertou ${score} de ${quizData.length}
       <br><br>🕯️ Continue aprendendo
     </div>`;
-  document.getElementById("nextBtn").style.display="none";
-  document.getElementById("nextQuizBtn").style.display="block";
+  document.getElementById("nextBtn").style.display = "none";
+  document.getElementById("shareBtn").style.display = "block";
+  document.getElementById("nextQuizBtn").style.display = "block";
   updateProgress(true);
 }
 
-function nextQuiz(){
+function nextQuiz() {
   quizIndex = (quizIndex + 1) % questionPools.length;
   quizData = questionPools[quizIndex];
   index = 0;
   score = 0;
   answered = false;
-  document.getElementById("nextBtn").style.display="block";
-  document.getElementById("nextQuizBtn").style.display="none";
+  document.getElementById("nextBtn").style.display = "block";
+  document.getElementById("shareBtn").style.display = "none";
+  document.getElementById("nextQuizBtn").style.display = "none";
   loadQuestion();
 }
 
-function updateProgress(end=false){
+function updateProgress(end=false) {
   document.getElementById("progress").style.width =
-    (end ? 100 : (index/quizData.length)*100) + "%";
+    (end ? 100 : (index / quizData.length) * 100) + "%";
+}
+
+function shareResult() {
+  const text = `Acertei ${score} de ${quizData.length} no Daily Bible Quiz 📖`;
+  if (navigator.share) {
+    navigator.share({
+      title: "Daily Bible Quiz",
+      text: text,
+      url: window.location.href
+    });
+  } else {
+    window.open(
+      `https://wa.me/?text=${encodeURIComponent(text + " " + window.location.href)}`
+    );
+  }
 }
 
 loadQuestion();
@@ -259,5 +256,7 @@ loadQuestion();
 
 </body>
 </html>
+
+
 
 
