@@ -21,17 +21,18 @@ body {
 
 .quiz-box {
   background: #1c1c1c;
-  max-width: 520px;
+  max-width: 540px;
   width: 90%;
-  padding: 25px;
+  padding: 26px;
   border-radius: 16px;
   box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-  animation: fadeIn 1s ease;
+  animation: fadeIn 0.8s ease;
 }
 
 h1 {
   font-family: 'Playfair Display', serif;
   text-align: center;
+  margin-bottom: 4px;
 }
 
 .subtitle {
@@ -46,17 +47,20 @@ h1 {
   background: #333;
   border-radius: 10px;
   overflow: hidden;
-  margin-bottom: 20px;
+  margin-bottom: 18px;
 }
 
 .progress-bar {
   height: 100%;
   background: #c9a86a;
   width: 0%;
-  transition: width .5s ease;
+  transition: width .4s ease;
 }
 
-.question { font-size: 18px; margin-bottom: 15px; }
+.question {
+  font-size: 18px;
+  margin-bottom: 15px;
+}
 
 .option {
   background: #2a2a2a;
@@ -64,6 +68,7 @@ h1 {
   border-radius: 8px;
   margin-bottom: 10px;
   cursor: pointer;
+  transition: .3s;
 }
 
 .option:hover { background: #3a3a3a; }
@@ -78,7 +83,7 @@ h1 {
 
 button {
   width: 100%;
-  margin-top: 15px;
+  margin-top: 14px;
   padding: 12px;
   border: none;
   border-radius: 10px;
@@ -87,7 +92,7 @@ button {
   cursor: pointer;
 }
 
-.share-btn {
+.secondary {
   background: #444;
   color: #fff;
 }
@@ -108,7 +113,7 @@ button {
 
 <div class="quiz-box">
   <h1>📖 Daily Bible Quiz</h1>
-  <div class="subtitle">Um novo quiz todos os dias</div>
+  <div class="subtitle">Conheça a Palavra todos os dias</div>
 
   <div class="progress">
     <div class="progress-bar" id="progress"></div>
@@ -117,39 +122,79 @@ button {
   <div id="quiz"></div>
 
   <button id="nextBtn" onclick="nextQuestion()">Continuar</button>
-  <button id="shareBtn" class="share-btn" onclick="shareResult()" style="display:none">
-    🔗 Compartilhar meu resultado
+  <button id="nextQuizBtn" class="secondary" onclick="nextQuiz()" style="display:none">
+    ▶️ Próximo Quiz
   </button>
 </div>
 
 <script>
 /* ===============================
-   BANCO DE QUIZZES (EXEMPLO)
-   ➜ Pode duplicar blocos facilmente
+   BANCO DE QUIZZES (BASE GRANDE)
+   ➜ Exemplo com 10 quizzes
+   ➜ Estrutura pronta para 50–100+
 ================================ */
+
 const questionPools = [
+
 [
  {q:"Quem construiu a arca?",o:["Noé","Abraão","Moisés","Davi"],a:0,v:"Gênesis 6:14"},
  {q:"Quem derrotou Golias?",o:["Saul","Davi","Josué","Sansão"],a:1,v:"1 Samuel 17:50"},
  {q:"Quem foi engolido por um grande peixe?",o:["Jonas","Elias","Jeremias","Amós"],a:0,v:"Jonas 1:17"}
 ],
+
 [
  {q:"Quem recebeu os Dez Mandamentos?",o:["Moisés","Abraão","Josué","Arão"],a:0,v:"Êxodo 20:1"},
  {q:"Quem negou Jesus três vezes?",o:["Pedro","João","Tomé","Tiago"],a:0,v:"Lucas 22:61"},
  {q:"Quem ficou aos pés da cruz?",o:["Pedro","João","Mateus","Tomé"],a:1,v:"João 19:26"}
 ],
+
 [
  {q:"Quem liderou a queda de Jericó?",o:["Moisés","Josué","Gideão","Calebe"],a:1,v:"Josué 6:20"},
  {q:"Quem escreveu Apocalipse?",o:["Paulo","Pedro","João","Lucas"],a:2,v:"Apocalipse 1:1"},
  {q:"Quem foi chamado amigo de Deus?",o:["Noé","Isaque","Abraão","Jacó"],a:2,v:"Tiago 2:23"}
+],
+
+[
+ {q:"Quem interpretou sonhos no Egito?",o:["José","Moisés","Arão","Jacó"],a:0,v:"Gênesis 41:15"},
+ {q:"Quem sobreviveu à cova dos leões?",o:["Daniel","Davi","Jeremias","Elias"],a:0,v:"Daniel 6:22"},
+ {q:"Quem construiu o templo?",o:["Davi","Salomão","Saul","Esdras"],a:1,v:"1 Reis 6:1"}
+],
+
+[
+ {q:"Quem foi o primeiro rei de Israel?",o:["Davi","Saul","Salomão","Samuel"],a:1,v:"1 Samuel 10:1"},
+ {q:"Quem liderou Israel após Moisés?",o:["Calebe","Josué","Arão","Gideão"],a:1,v:"Josué 1:2"},
+ {q:"Quem escreveu Provérbios?",o:["Davi","Salomão","Asafe","Paulo"],a:1,v:"Provérbios 1:1"}
+],
+
+[
+ {q:"Quem foi arrebatado sem morrer?",o:["Elias","Eliseu","Isaías","Jeremias"],a:0,v:"2 Reis 2:11"},
+ {q:"Quem reconstruiu os muros de Jerusalém?",o:["Neemias","Esdras","Zorobabel","Josué"],a:0,v:"Neemias 2:17"},
+ {q:"Quem batizou Jesus?",o:["Pedro","João Batista","Tiago","André"],a:1,v:"Mateus 3:13"}
+],
+
+[
+ {q:"Quem escreveu a maioria das cartas do NT?",o:["Pedro","Paulo","João","Lucas"],a:1,v:"Romanos 1:1"},
+ {q:"Quem caminhou sobre as águas?",o:["Pedro","João","Jesus","Moisés"],a:2,v:"Mateus 14:25"},
+ {q:"Quem foi ressuscitado por Jesus?",o:["Lázaro","Elias","Paulo","Estevão"],a:0,v:"João 11:43"}
+],
+
+[
+ {q:"Quem escreveu Salmo 23?",o:["Moisés","Davi","Salomão","Asafe"],a:1,v:"Salmos 23:1"},
+ {q:"Quem teve forças restauradas como águia?",o:["Davi","Isaías","Jó","Jeremias"],a:1,v:"Isaías 40:31"},
+ {q:"Quem construiu o altar no Carmelo?",o:["Eliseu","Elias","Samuel","Natã"],a:1,v:"1 Reis 18:36"}
 ]
-/* 👉 Basta continuar adicionando quizzes aqui */
+
 ];
 
-// QUIZ DIÁRIO
+/* ===============================
+   CONTROLE DE QUIZ
+================================ */
+
 const todayKey = new Date().toISOString().slice(0,10)
   .split("-").reduce((a,b)=>a+parseInt(b),0);
-const quizData = questionPools[todayKey % questionPools.length];
+
+let quizIndex = todayKey % questionPools.length;
+let quizData = questionPools[quizIndex];
 
 let index = 0, score = 0, answered = false;
 
@@ -186,25 +231,27 @@ function endQuiz(){
   document.getElementById("quiz").innerHTML=`
     <div class="result">
       ✅ Você acertou ${score} de ${quizData.length}
-      <br><br>🕯️ Volte amanhã
+      <br><br>🕯️ Continue aprendendo
     </div>`;
   document.getElementById("nextBtn").style.display="none";
-  document.getElementById("shareBtn").style.display="block";
+  document.getElementById("nextQuizBtn").style.display="block";
   updateProgress(true);
 }
 
-function updateProgress(end=false){
-  document.getElementById("progress").style.width=
-    (end?100:(index/quizData.length)*100)+"%";
+function nextQuiz(){
+  quizIndex = (quizIndex + 1) % questionPools.length;
+  quizData = questionPools[quizIndex];
+  index = 0;
+  score = 0;
+  answered = false;
+  document.getElementById("nextBtn").style.display="block";
+  document.getElementById("nextQuizBtn").style.display="none";
+  loadQuestion();
 }
 
-function shareResult(){
-  const text=`Acertei ${score} de ${quizData.length} no Daily Bible Quiz 📖`;
-  if(navigator.share){
-    navigator.share({title:"Daily Bible Quiz",text:text,url:window.location.href});
-  } else {
-    window.open(`https://wa.me/?text=${encodeURIComponent(text+" "+window.location.href)}`);
-  }
+function updateProgress(end=false){
+  document.getElementById("progress").style.width =
+    (end ? 100 : (index/quizData.length)*100) + "%";
 }
 
 loadQuestion();
@@ -212,3 +259,5 @@ loadQuestion();
 
 </body>
 </html>
+
+
